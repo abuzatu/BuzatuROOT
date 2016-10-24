@@ -1,0 +1,20 @@
+Adrian Buzatu (adrian.buzatu@glasgow.ac.uk)
+Example of a package of data analysis in C++, here the ChangeLog
+
+Tag 00-00-01:
+	First version
+
+Tag 00-00-02:
+	Added Course with the lecture, task and solution.
+	Tagged on 27 Nov 2015
+
+Tag 00-00-03:
+	Moved the code from the previous package to Package, as we have the folder Course more recently
+	Tagged on 27 Nov 2015
+	
+Tag 00-00-04:
+	Oct 20,last version inSVN, first version in GitLab.
+
+Tag 00-00-05:
+	[work in progress]
+

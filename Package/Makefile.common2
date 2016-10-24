@@ -1,0 +1,108 @@
+# define the default suffixes that we assume in our package
+HeaderSuffix=h
+SourceSuffix=cxx
+ObjectPath=$(PATH_TO_OBJECTS_FROM_THIS_PACKAGE)
+ObjectSuffix=o
+# the suffix and prefix for the output file are defined in the Makefile
+# specific for each folder, as it will vary 
+# depending if shared library or executable
+
+# separate between shared library (lib) and executable (exe)
+ifeq ($(COMPILE_AS),lib)
+     # full path to ../lib
+     OutputPath=$(PATH_TO_SHARED_LIBRARIES_FROM_THIS_PACKAGE)
+     # convention says that we put lib in front, so libTest.so
+     OutputPrefix=lib
+     # convention says that the suffix is so
+     OutputSuffix=so
+     # if use SOFLAGS, compile as a shared library
+     MY_SOFLAGS=$(SOFLAGS)
+else ifeq ($(COMPILE_AS),exe)
+     # full path to ../exe
+     OutputPath=$(PATH_TO_BINARIES_FROM_THIS_PACKAGE)
+     # convention says there is no prefix, so Test.exe
+     OutputPrefix=
+     # convention says that the suffix is exe
+     OutputSuffix=exe
+     # if not use SOFLAGS, compile as an executable
+     MY_SOFLAGS=
+endif
+
+# combine these two flags with long names into one flat with shorter name
+MY_LINKING_FLAGS=$(MY_SOFLAGS) $(WHICH_OTHER_SHARED_LIBRARIES_ARE_NEEDED_TO_COMPILE)
+
+# test.h, the header file
+NAME_HEA = $(NAME_OF_CURRENT_FOLDER).$(HeaderSuffix)
+# test.cxx, the source file
+NAME_SRC = $(NAME_OF_CURRENT_FOLDER).$(SourceSuffix)
+# test.o, the object file
+NAME_OBJ = $(ObjectPath)/$(NAME_OF_CURRENT_FOLDER).$(ObjectSuffix)
+# ../lib/libtest.so if shared library or ../bin/test.exe if executable
+NAME_OUT = $(OutputPath)/$(OutputPrefix)$(NAME_OF_CURRENT_FOLDER).$(OutputSuffix)
+
+# this is the mark of the output file in the make command, typically -o
+OutputMark=-o
+
+all:$(NAME_OUT)
+
+COMPILE_IN_HOW_MANY_STEPS=2
+# compile in 1 step or 2 steps (producing the .o files as well)
+ifeq ($(COMPILE_IN_HOW_MANY_STEPS),1)
+     $(NAME_OUT):$(NAME_SRC) $(NAME_HEA)
+	@echo "start compiling and linking in one step: $@"
+	$(CXX) $(NAME_SRC) $(CXXFLAGS) $(ROOTCXXFLAGS) $(ROOTLIBS) $(SYSLIBS) $(MY_LINKING_FLAGS) $(OutputMark) $@
+	@echo "end compiling and linking in one step: $@"
+else ifeq ($(COMPILE_IN_HOW_MANY_STEPS),2)
+     $(NAME_OUT):$(NAME_OBJ)
+	@echo "start linking: $@."
+	$(LD) $^ $(LDFLAGS) $(ROOTLDFLAGS) $(ROOTLIBS) $(SYSLIBS) $(MY_LINKING_FLAGS) $(OutputMark) $@
+	@echo "end linking: $@."
+     $(NAME_OBJ):$(NAME_SRC) $(NAME_HEA)
+	@echo "start compiling: $@."
+	$(CXX) -c $< $(CXXFLAGS) $(ROOTCXXFLAGS) $(OutputMark) $@
+	@echo "end compiling: $@."
+endif
+
+# $@ - what is on the left of ":", so the target file
+# $^ - what is on the right of ":', so the list of dependency files
+# $< - first element from the right of ":', so the first dependency files
+
+clean:
+	@rm -f ${NAME_OBJ}
+	@rm -f ${NAME_OUT}
+	@rm -f ynamiclib
+	@rm -f *~
+	@rm -f *.pcm
+	@rm -f \#*
+	@rm -f *.pdf *.eps *.ps *.gif *.png
+	@echo "done: cleaning for $(NAME_OF_CURRENT_FOLDER)."
+
+
+info:
+	@echo "WHERE_I_RUN=$(WHERE_I_RUN)"
+	@echo "ARCH=$(ARCH)"
+	@echo "MACOSXTARGET=$(MACOSXTARGET)"
+	@echo "OPT=$(OPT)"
+	@echo "CXX=$(CXX)"
+	@echo "CXXFLAGS=$(CXXFLAGS)"
+	@echo "LD=$(LD)"
+	@echo "LDFLAGS=$(LDFLAGS)"
+	@echo "SOFLAGS=$(SOFLAGS)"
+	@echo "ROOTCXXFLAGS=$(ROOTCXXFLAGS)"
+	@echo "ROOTLDFLAGS=$(ROOTLDFLAGS)"
+	@echo "ROOTLIBS=$(ROOTLIBS)"
+	@echo "SYSLIBS=$(SYSLIBS)"
+	@echo "PATH_TO_OBJECTS_FROM_THIS_PACKAGE=$(PATH_TO_OBJECTS_FROM_THIS_PACKAGE)"
+	@echo "PATH_TO_SHARED_LIBRARIES_FROM_THIS_PACKAGE=$(PATH_TO_SHARED_LIBRARIES_FROM_THIS_PACKAGE)"
+	@echo "PATH_TO_BINARIES_FROM_THIS_PACKAGE=$(PATH_TO_BINARIES_FROM_THIS_PACKAGE)"
+	@echo "NAME_OF_CURRENT_FOLDER=$(NAME_OF_CURRENT_FOLDER)"
+	@echo "COMPILE_AS=$(COMPILE_AS)"
+	@echo "COMPILE_IN_HOW_MANY_STEPS=$(COMPILE_IN_HOW_MANY_STEPS)"
+	@echo "MY_SOFLAGS=$(MY_SOFLAGS)"
+	@echo "WHICH_OTHER_SHARED_LIBRARIES_ARE_NEEDED_TO_COMPILE=$(WHICH_OTHER_SHARED_LIBRARIES_ARE_NEEDED_TO_COMPILE)"
+	@echo "MY_LINKING_FLAGS=$(MY_LINKING_FLAGS)"
+	@echo "NAME_HEA=$(NAME_HEA)"
+	@echo "NAME_SRC=$(NAME_SRC)"
+	@echo "NAME_OBJ=$(NAME_OBJ)"
+	@echo "NAME_OUT=$(NAME_OUT)"
+

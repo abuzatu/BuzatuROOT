@@ -1,0 +1,63 @@
+To connect to brutha, use x2go, create a new session, give it your name, just XFC (or something like this), as KDE does not work, put your username, then click on the session, put your password, and you are on linux. Then open a terminal and you are ready to run. 
+
+****
+
+To setup ROOT on brutha.physics.gla.ac.uk.uk
+
+source /cvmfs/sft.cern.ch/lcg/external/ROOT/5.34.23/x86_64-slc6-gcc47-opt/root/bin/root/thisroot.sh
+
+To do this every time you open a terminal, put it at the end of .bashrc
+
+emacs ~/.bashrc&
+
+*****
+The file I described as Exercise1.tgz gave a warning it was not a tar archive. It was. But it seems that the webpage download puts its own compression on the top of that. That is why it appears as not a tar archive. 
+
+http://superuser.com/questions/841865/extracting-a-tar-gz-file-returns-this-does-not-look-like-a-tar-archive
+
+suggests that you have to do
+
+gzip -d Exercise1.tgz
+
+This will remove Exercise1.tgz and give you Exercise1.tar
+
+Now you just unbundle the .tar file with 
+
+tar xvf Exercise1.tar and you get a folder Exerxise1 with all the files.
+
+*****
+Exercises test.C through test5.C are just to run what it is there and understand what it is done. 
+
+Exercise test6.C asks to compile this code. Compiled code runs faster. Errors in code are caught at compile time. It is overall better. You need to include the location of the headers of ROOT libraries with "-I", the location of the libraries with "-L" followed by the individual libraries with "-l". How do you know these information? One way I suggested in the task is to look at a code that already works, the "make" of the TutorialCPPROOT and copy those from there. That code calls some commands that ROOT knows about to tell you what version of ROOT you have, what are the flags used in C++ compilation (the part with "-I") and the libraries used in C++ compilation (the part with "-L"). So let's find out.
+
+root-config --cflags
+
+with output:
+-pthread -stdlib=libc++ -std=c++11 -m64 -I/Users/abuzatu/Applications/root-6.04.00/include
+
+We notice that alongside the -I it picks up automatically if it is 32 or 64 bit machine, if C++11 is enabled, and others.
+
+`root-config --libs`
+
+output
+
+-L/Users/abuzatu/Applications/root-6.04.00/lib -lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lpthread -Wl,-rpath,/Users/abuzatu/Applications/root-6.04.00/lib -stdlib=libc++ -lm -ldl
+
+We notice that alongside the "-L" it has all the libraries available in ROOT starting each with "-l". 
+
+So we can compile with 
+
+g++ test6.C -o test6.exe -pthread -stdlib=libc++ -std=c++11 -m64 -I/Users/abuzatu/Applications/root-6.04.00/include -L/Users/abuzatu/Applications/root-6.04.00/lib -lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lpthread -Wl,-rpath,/Users/abuzatu/Applications/root-6.04.00/lib -stdlib=libc++ -lm -ldl
+
+But we can write shorter for that. 
+
+g++ test6.C -o test6.exe `root-config --cflags` `root-config --libs`
+
+That means that the output we got before when running these two commands individually appears directly as arguments of g++. That way, we don't care anymore on what machine we are. We just put it and the ROOT executable will be compiled. 
+
+Notice the character is inverted apostrophe, `, and not '. This is a bash command which means we want to execute the command before, for example.
+
+export command="ls"
+`echo $command`
+
+is as if we wrote in the terminal "ls", which would list the files in the folder.  

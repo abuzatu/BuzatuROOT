@@ -1,0 +1,140 @@
+To compile in C++:
+g++ test.C -o test.exe `root-config --cflags` `root-config --libs`
+To run in C++:
+./test.exe
+
+There is no compilation in Python:
+python test.py
+
+Or you can make it executable
+cp test.py test2.py
+
+chmod +x test2.py
+
+And run directly
+./test2.py
+
+You will get an error. To solve this, you need to tell bash that this is python code and not bash or other. So add this as the first line of your file.
+
+#!/usr/bin/python
+
+Now it works again.
+
+A histogram appeared and disappeared. If you have thausands of histograms to produce, this will slow your computer down. So let's make it not appear the intermediate histograms, but only the final .pdf files. 
+
+Add add gROOT at the list of things to import and then add on the next line
+
+# to run in batch mode
+gROOT.SetBatch(True)
+
+****
+To summarize you can run 
+./test_final.py
+
+****
+
+PyROOT is not compiled, so slower. But to read flat trees of even hundreds of thausands of events, it takes only a few minutes. We can then create histograms and store them to a file. Then we open the file again and read histograms which we manipulate. We will be using PyROOT as it has a simpler syntax and it's easier to run. 
+
+****
+We can use ROOT to create a TGraph, such as when things vary in time, or a trajectory of a planet y(t), x(t). Using the orbit of Earth from ./input/Earth.txt we can create a Graph very easily. If we open in Excel ./input/Earth.csv we have to select both columns with "Control + A", then Insert, then "Chart", then "Scatter", then "Marked Scatter". Why not do it in one step only?
+
+./orbit.py 
+evince ./output/orbit.pdf
+
+or event do that on one line
+
+./orbit.py && evince ./output/orbit.pdf
+
+**** First part: using histograms*** 
+
+Now we move to what we do most in particle physics, namely filling histograms. We do not care the order in time in which the collisions happend. We care about how many collisions are in each category, or bin of the histogram. When filling the histogram, we lose information. But we also need less data storage, just for the counts in each bin of the histogram. 
+
+The most comon data analysis means looping over the entries of a flat tree. For each entry we read the values that we are interested on. We use them to compute new quantities that were not in the tree in the first place. We then store the original quantities and the new quantities in histograms. 
+
+cd input
+wget www.ppe.gla.ac.uk/~abuzatu/forTutorialCPPROOT/tree_llbb.root
+cd ..
+
+readTree.py is such an example.
+
+It takes arguments from the command line.
+
+The information contained is simulated H->bb decay, namely the 4-vector values Pt, Eta, Phi, E of both b1 and b2 at different calibration levels (Nominal, OneMu, etc). The correct values are those of Parton (before the quark hadronisation) and TruthWZ (after the quark hardronisation). 
+
+The code reads the 4-vectors of b1 and b2 that the Higgs boson decays to, it fills two TLorentzVectors. By adding these together we get the TLorentzVector of the Higgs candidate, since the Higgs boson decays to these particles b1 and b2. That is the mathematical expression law of conservation of energy and momentum. 
+
+An output file and histogram is created. The histogram is filled for every entry. It is then saved to the file. 
+./readTree.py 100
+
+The output is a .root file that contains one histogram. 
+
+root.exe output/histo_llbb.root 
+TBrowser a
+or 
+root [2] Higgs_Nominal_M->Draw()
+
+To run on all events, 
+
+./readTree.py -1
+
+Your TASK is to create a new file and modify it so that you save the Higgs mass not just for Nominal, but to any list of corrections that the user desires that is part of the initial tree, like "OneMu", "PtRecoBukin", "PtRecoGauss", "PtRecoAverageBukinAndGauss", "Parton". 
+
+Of course, it is not efficient to just copy/paste and change Nominal to OneMu. So let's put code specific for Nominal in a functioin that takes "Nominal" as an input. And then do the same for any new value, such as the ones above. The same goes for b1 and b2. There is the same code, just "b1" and "b2" are different. A function shoudl be there as well and be called twice for "b1" and "b2". 
+
+Once we have the .root file with histograms for all the events, it will look like this.
+ppewww.physics.gla.ac.uk/~abuzatu/forTutorialCPPROOT/histo_llbb.root
+
+root -l ./output/histo_llbb.root
+.ls
+root [1] .ls
+TFile**		histo_llbb.root	
+ TFile*		histo_llbb.root	
+  KEY: TH1F	Higgs_Parton_M;1	Higgs_Parton_M
+  KEY: TH1F	Higgs_Nominal_M;1	Higgs_Nominal_M
+  KEY: TH1F	Higgs_OneMu_M;1	Higgs_OneMu_M
+  KEY: TH1F	Higgs_OneMuNu_M;1	Higgs_OneMuNu_M
+  KEY: TH1F	Higgs_AllMu_M;1	Higgs_AllMu_M
+  KEY: TH1F	Higgs_AllMuNu_M;1	Higgs_AllMuNu_M
+  KEY: TH1F	Higgs_PtRecoGauss_M;1	Higgs_PtRecoGauss_M
+  KEY: TH1F	Higgs_PtRecoBukin_M;1	Higgs_PtRecoBukin_M
+  KEY: TH1F	Higgs_Regression_M;1	Higgs_Regression_M
+
+You can draw a histogram from the command line with
+Higgs_Parton_M->Draw()
+Higgs_Nominal_M->Draw()
+
+Or from the TBrowser 
+TBrowser a
+Then double click on the .root file, then on the histograms. 
+
+We can save a histogram to a file simply this way by "File", "Save As", "c.pdf". 
+Attached one here: 
+http://ppewww.physics.gla.ac.uk/~abuzatu/forTutorialCPPROOT/c.pdf
+Notice that there are about 55k events.
+
+Parton means what we simulated, namely 125 GeV for the Higgs boson. 
+
+All the others are reconstructed, so what we should get. There are three main steps: Nominal. From this we improve to OneMu. From this we improve to PtRecoBukin. We want to quantify how big is the improvement from one step to the next. We want to see how the peak and width change. The peak should be as close as possible to 125 GeV, while the width should be as close as possible to zero GeV. These are the values for Parton, of course. 
+
+We notice there is no need to fit the Parton, as it is already with just one bin and all the values there.
+
+Running over all the statistics takes 12 minutes. So we need to create _another_ python file where we will read the histograms from the file and fit them. This takes just a few seconds. We do not want to rurun over the full statistics every time we test something in our code. That is why we need to separate the files. 
+
+Please send me this code as soon as you have it, so that I can give you feedback on it, so that you can move to the second part of task 2.
+
+**** Second part: using histograms*** 
+
+These leads us to part 2 of the task, where we create a new file called readHisto.py. I will show you here the basic things that we need to do and you will fill in the blanks to do it for all the corrections. Just as in exercise one, that will mean putting things into functions that are then called several times for each correction we want to study. 
+
+
+
+
+
+Once this is done, then we want to compare the different shapes of Higgs candidate mass for the different corrections or calibrations. We want to learn to introduce a legend in the plot, regular text that is not the legend, x and y axis text, to be able to set the size of these texts, as well as the color. Then, we want to fit the histograms with a Gauss function. You will notice that the Gauss function fits well, but not very well, as these distributions are asymmetric. It turns out a scientist called Bukin created a new function is like a Gaussian, but allows assymetry. Instead of 3 arguments, it has 6 arguments. We will fit wit this function. While Gauss is a function already defined by ROOT in TF1, Bukin is not. So we have to learn to create our own function and use it in the fit. 
+
+In file Bukin.py I introduced Python code that defines a class called Gauss, as if you define your own Gauss function. You can first make sure you can use this one, and compare the result with the Gauss function already implemented in ROOT. Once you confirm you can fit to a new function you introduced, let's use the Bukin function. 
+We want to read the second argument of the fit as the peak value, and the third argument of the fit as the width. We want to print those values, as well as their ratio called resolution, on the legend. 
+
+We also want to be able to see only thie histogram without fit (fit can be Bukin or Gauss), or show the histograms and the fit overlaid, or show just the fits. Here are examples of code I have done that I want you to learn to do. As this is what you do a lot in your analysis. 
+
+

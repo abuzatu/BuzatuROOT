@@ -1,0 +1,68 @@
+In ROOT we can run in interactive way, or in macros, or in executables. Let's practice with that. 
+
+1. interactive way
+
+root -l
+and in the ROOT terminal type line by line followed by enter
+
+TH1F* h = new TH1F("hist","hist",10,0,100);
+h->Fill(23,3);	
+h->Fill(44,6);
+h->Fill(67,2);
+TCanvas* c = new TCanvas("c","c",600,400);
+h->Draw();
+c->Print("./histogram.pdf");
+
+This creates a histogram, fills it, creates a canvas, draws the histogram. Be default the histogram is owned by the canvas (ROOT specific thinking) and then when we print the canvas to a file, we print it with the histogram on it. Check that the file exists with 
+
+evince ./histogram.pdf
+
+2. macro. test1.C through test5.C are macros. Check them to see how they become more complex step by step. You run a macro with.
+
+Option 1: 
+root -l
+and from the ROOT terminal
+.x test1.C
+.x test2.C(2)
+
+Option 2:
+directly from bash, so that you can call ROOT macros from your own bash scripts.
+root -l -b -q "test1.C"
+root -l -b -q "test2.C(2)"
+
+3. Executable, which is the best way. 
+
+g++ test6.C
+
+The compilation will fail. We need to include the headers. It does not know TH1F.h. With "-I" we point the location. But first we need to learn where ROOT is installed. 
+
+which root
+
+I get
+
+/Users/abuzatu/Applications/root-6.04.00/bin/root
+
+in a new terminal I go to the folder 
+cd /Users/abuzatu/Applications/root-6.04.00
+ls 
+
+I notice the include folders, and then the lib folders. 
+
+We include the include with -I and the lib folder with -L, as we saw in Lab3 of SUPA COO.
+
+g++ test6.C -I /Users/abuzatu/Applications/root-6.04.00/include -L /Users/abuzatu/Applications/root-6.04.00/lib
+
+We still need to decide what libaries to put after lib with -l as prefix. For this we can look at a package that does compile ROOT automatically, similar to TutorialCPP, there is TutorialCPPROOT.
+
+wget www.ppe.gla.ac.uk/~abuzatu/TutorialCPPROOT/TutorialCPPROOT.tgz
+tar xvzf TutorialCPPROOT.tgz
+cd TutorialCPPROOT
+make
+source util/setup.sh
+./bin/testROOT.exe
+
+in the output folder you should fine one plot.
+
+in the lib folder there is a shared library
+
+while compiling you can see what make options are used, to get inspired what -l to use above.

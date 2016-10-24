@@ -1,0 +1,4 @@
+PATH_TO_OBJECTS_FROM_THIS_PACKAGE=$(shell cd ../obj; echo `pwd`)
+PATH_TO_SHARED_LIBRARIES_FROM_THIS_PACKAGE=$(shell cd ../lib; echo `pwd`)
+PATH_TO_BINARIES_FROM_THIS_PACKAGE=$(shell cd ../bin; echo `pwd`)
+NAME_OF_CURRENT_FOLDER=$(shell basename `pwd`)
